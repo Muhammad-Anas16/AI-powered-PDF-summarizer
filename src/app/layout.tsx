@@ -24,9 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} antialiased`}>
-        <div className="relative flex flex-col min-h-screen">
+        <div className="relative flex flex-col min-h-screen ">
           <Header />
-          <main className="flex-1 pt-20"> {/* Adjust this if Header is fixed */}
+          <main className="">
             {children}
           </main>
           <Footer />

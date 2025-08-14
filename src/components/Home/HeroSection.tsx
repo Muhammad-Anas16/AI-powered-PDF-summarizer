@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 
 const HeroSection = () => {
     return (
-        <section className="relative mx-auto flex flex-col items-center justify-center pt-32 pb-20 transition-all animate-in lg:px-12 max-w-7xl text-center">
+        <section className="relative mx-auto flex flex-col items-center justify-center pt-10 pb-20 transition-all animate-in lg:px-12 max-w-7xl text-center">
 
             {/* Gradient Badge */}
             <div className="flex items-center cursor-pointer mb-6">
