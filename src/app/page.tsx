@@ -9,7 +9,7 @@ import PricingSection from "@/components/Home/PricingSection";
 export default function Home() {
   return (
     <div className="relative">
-      {/* <BgGradient> */}
+      <BgGradient>
       {/* <div className="flex flex-col"> */}
       <HeroSection />
       <DemoSection />
@@ -17,7 +17,7 @@ export default function Home() {
       <HowItWorkSection />
       <PricingSection />
       <CTA_Section />
-      {/* </BgGradient> */}
+      </BgGradient>
     </div>
   );
 }
