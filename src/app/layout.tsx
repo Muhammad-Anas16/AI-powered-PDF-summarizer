@@ -13,7 +13,7 @@ const geistSans = FontSans({
 export const metadata: Metadata = {
   title: "Lubb - AI-powered PDF summarizer",
   description:
-    "Save hours of reading time. Transform Lengthy PDFs into clear, accurate summeries in seconds with our advanced AI technology.",
+    "Save hours of reading time. Transform Lengthy PDFs into clear, accurate summaries in seconds with our advanced AI technology.",
 };
 
 export default function RootLayout({
@@ -23,10 +23,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable}antialiased`}>
+      <body className={`${geistSans.variable} antialiased`}>
         <div className="relative flex flex-col min-h-screen">
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pt-20"> {/* Adjust this if Header is fixed */}
+            {children}
+          </main>
           <Footer />
         </div>
       </body>
