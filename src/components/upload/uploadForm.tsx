@@ -3,6 +3,7 @@
 import React from "react";
 import UploadFormInput from "./uploadFormInput";
 import { z } from "zod";
+import { useUploadThing } from "@/utils/uploadthing";
 
 const schema = z.object({
   file: z
@@ -16,24 +17,49 @@ const schema = z.object({
 });
 
 const UploadForm = () => {
+  const { startUpload, routeConfig } = useUploadThing("pdfUploader", {
+    onClientUploadComplete: () => {
+      console.log("Uploaded successfully!");
+    },
+
+    onUploadError: (err) => {
+      console.log("Error occurred while uploading", err.message);
+    },
+
+    onUploadBegin: ({ file }) => {
+      console.log("Upload has begun for", file);
+    },
+  });
+
   const HandleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file");
 
-    // console.log("Uploaded file:", file);
+    if (!file || !(file instanceof File)) {
+      console.log("No file uploaded or invalid file");
+      return;
+    }
 
     const validatedField = schema.safeParse({ file });
 
     if (!validatedField.success) {
-      console.log("Invalid Files");
+      console.log("Validation Errors:", validatedField.error.flatten());
       return;
     }
 
-    console.log("validatedField : ", validatedField);
+    console.log("Validated Field:", validatedField.data);
+
+    const resp = startUpload([file]);
+
+    if (!resp) {
+      console.log("Upload failed to start");
+      return;
+    }
   };
+
   return (
-    <div className="flex flex-col gap-8 w-full max-w-2xl mx-auto:">
+    <div className="flex flex-col gap-8 w-full max-w-2xl mx-auto">
       <UploadFormInput onSubmit={HandleSubmit} />
     </div>
   );
