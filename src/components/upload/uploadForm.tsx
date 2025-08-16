@@ -17,16 +17,21 @@ const schema = z.object({
 });
 
 const UploadForm = () => {
+  const { toast } = useToast();
   const { startUpload, routeConfig } = useUploadThing("pdfUploader", {
     onClientUploadComplete: () => {
       console.log("Uploaded successfully!");
     },
 
     onUploadError: (err) => {
-      console.log("Error occurred while uploading", err.message);
+      toast({
+        title: "Upload Error",
+        description: `An error occurred during upload: ${err.message}`,
+        variant: "destructive",
+      });
     },
 
-    onUploadBegin: ({ file }) => {
+    onUploadBegin: ({ file }: any) => {
       console.log("Upload has begun for", file);
     },
   });
@@ -38,13 +43,29 @@ const UploadForm = () => {
 
     if (!file || !(file instanceof File)) {
       console.log("No file uploaded or invalid file");
+      toast({
+        title: "❌ Something went wrong",
+        description: `No file uploaded or invalid file`,
+        variant: "destructive",
+      });
       return;
     }
+
+    toast({
+      title: "📑 Processing",
+      description: `AI is reading your PDF...✨ Please wait.`,
+      variant: "destructive",
+    });
 
     const validatedField = schema.safeParse({ file });
 
     if (!validatedField.success) {
       console.log("Validation Errors:", validatedField.error.flatten());
+      toast({
+        title: "❌ Something went wrong",
+        description: `Please use a different file.`,
+        variant: "destructive",
+      });
       return;
     }
 
