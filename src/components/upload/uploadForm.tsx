@@ -4,6 +4,8 @@ import React from "react";
 import UploadFormInput from "./uploadFormInput";
 import { z } from "zod";
 import { useUploadThing } from "@/utils/uploadthing";
+import { toast } from "sonner";
+import generatePdfSummary from "@/action/uploadAction";
 
 const schema = z.object({
   file: z
@@ -17,18 +19,13 @@ const schema = z.object({
 });
 
 const UploadForm = () => {
-  const { toast } = useToast();
-  const { startUpload, routeConfig } = useUploadThing("pdfUploader", {
+  const { startUpload } = useUploadThing("pdfUploader", {
     onClientUploadComplete: () => {
       console.log("Uploaded successfully!");
     },
 
     onUploadError: (err) => {
-      toast({
-        title: "Upload Error",
-        description: `An error occurred during upload: ${err.message}`,
-        variant: "destructive",
-      });
+      toast.error(`An error occurred during upload: ${err.message}`);
     },
 
     onUploadBegin: ({ file }: any) => {
@@ -36,47 +33,40 @@ const UploadForm = () => {
     },
   });
 
-  const HandleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const HandleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const file = formData.get("file");
 
     if (!file || !(file instanceof File)) {
       console.log("No file uploaded or invalid file");
-      toast({
-        title: "❌ Something went wrong",
-        description: `No file uploaded or invalid file`,
-        variant: "destructive",
-      });
+      toast.error("❌ Something went wrong: No file uploaded or invalid file");
       return;
     }
 
-    toast({
-      title: "📑 Processing",
-      description: `AI is reading your PDF...✨ Please wait.`,
-      variant: "destructive",
-    });
+    toast.info("📑 Processing: AI is reading your PDF...✨ Please wait.");
 
     const validatedField = schema.safeParse({ file });
 
     if (!validatedField.success) {
       console.log("Validation Errors:", validatedField.error.flatten());
-      toast({
-        title: "❌ Something went wrong",
-        description: `Please use a different file.`,
-        variant: "destructive",
-      });
+      toast.error("❌ Something went wrong: Please use a different file.");
       return;
     }
 
     console.log("Validated Field:", validatedField.data);
 
-    const resp = startUpload([file]);
+    // Await the upload response
+    const resp = await startUpload([file]);
 
-    if (!resp) {
+    if (!resp || resp.length === 0) {
       console.log("Upload failed to start");
       return;
     }
+
+    // Pass only the first uploaded file as a single-element array
+    const summary = await generatePdfSummary([resp[0]]);
+    console.log("PDF Summary in UploadForm.tsx =>:", {summary});
   };
 
   return (
