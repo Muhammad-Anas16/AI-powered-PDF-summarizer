@@ -1,5 +1,6 @@
 "use server";
 
+import gemini from "@/lib/gemini";
 import fetchAndExtractPdfText from "@/lib/langChain";
 
 const generatePdfSummary = async (
@@ -40,7 +41,19 @@ const generatePdfSummary = async (
 
   try {
     const pdfText = await fetchAndExtractPdfText(pdfUrl);
-    console.log("pdfText in Upload-Action =>", pdfText);
+    // console.log("pdfText in Upload-Action =>", pdfText);
+
+    try {
+      const summary = await gemini(pdfText);
+    } catch (error) {
+      console.error("Error in gemini processing:", error);
+      return {
+        success: false,
+        message: "Gemini processing failed",
+        data: null,
+      };
+    }
+
     return {
       success: true,
       message: "PDF processed successfully",
