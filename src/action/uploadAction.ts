@@ -4,7 +4,7 @@ import gemini from "@/lib/gemini";
 import fetchAndExtractPdfText from "@/lib/langChain";
 
 const generatePdfSummary = async (
-  uploadResponce: [
+  uploadResponse: [
     {
       serverData: {
         userId: string;
@@ -16,10 +16,10 @@ const generatePdfSummary = async (
     }
   ]
 ) => {
-  if (!uploadResponce) {
+  if (!uploadResponse || uploadResponse.length === 0) {
     return {
       success: false,
-      message: "File Upload Failed",
+      message: "File upload failed",
       data: null,
     };
   }
@@ -29,24 +29,24 @@ const generatePdfSummary = async (
       userId,
       file: { url: pdfUrl, name: fileName },
     },
-  } = uploadResponce[0];
+  } = uploadResponse[0];
 
   if (!pdfUrl) {
     return {
       success: false,
-      message: "File Upload Failed",
+      message: "Invalid file URL",
       data: null,
     };
   }
 
   try {
     const pdfText = await fetchAndExtractPdfText(pdfUrl);
-    // console.log("pdfText in Upload-Action =>", pdfText);
 
+    let summary: string | null = null;
     try {
-      const summary = await gemini(pdfText);
+      summary = await gemini(pdfText);
     } catch (error) {
-      console.error("Error in gemini processing:", error);
+      console.error("Error generating summary with Gemini:", error);
       return {
         success: false,
         message: "Gemini processing failed",
@@ -57,9 +57,10 @@ const generatePdfSummary = async (
     return {
       success: true,
       message: "PDF processed successfully",
-      data: pdfText,
+      data: { userId, pdfText, summary },
     };
   } catch (error) {
+    console.error("Error processing PDF:", error);
     return {
       success: false,
       message: "File processing failed",

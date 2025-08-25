@@ -20,7 +20,7 @@ const UploadFormInput = ({ onSubmit }: onSubmitProp) => {
           required
           className="cursor-pointer"
         />
-        <Button className="bg-green-600 hover:bg-green-700 cursor-pointer">
+        <Button type="submit" className="bg-green-600 hover:bg-green-700 cursor-pointer">
           Upload Your PDF
         </Button>
       </div>

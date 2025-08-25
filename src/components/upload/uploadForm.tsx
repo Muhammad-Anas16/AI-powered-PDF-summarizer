@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
 import generatePdfSummary from "@/action/uploadAction";
+import Cookies from "js-cookie";
 
 const schema = z.object({
   file: z
@@ -35,38 +36,44 @@ const UploadForm = () => {
 
   const HandleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const token = Cookies.get("token");
+    if (!token) {
+      toast.error("❌ You must be logged in to upload.");
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const file = formData.get("file");
 
     if (!file || !(file instanceof File)) {
-      console.log("No file uploaded or invalid file");
-      toast.error("❌ Something went wrong: No file uploaded or invalid file");
+      toast.error("❌ No file uploaded or invalid file");
+      return;
+    }
+
+    const validatedField = schema.safeParse({ file });
+    if (!validatedField.success) {
+      toast.error("❌ Please upload a valid PDF under 20MB.");
       return;
     }
 
     toast.info("📑 Processing: AI is reading your PDF...✨ Please wait.");
 
-    const validatedField = schema.safeParse({ file });
+    try {
+      const resp = await startUpload([file]);
+      if (!resp || resp.length === 0) {
+        toast.error("❌ Upload failed.");
+        return;
+      }
 
-    if (!validatedField.success) {
-      console.log("Validation Errors:", validatedField.error.flatten());
-      toast.error("❌ Something went wrong: Please use a different file.");
-      return;
+      // Only pass the first uploaded file to match your generatePdfSummary() type
+      const summary = await generatePdfSummary([resp[0]]);
+      console.log("PDF Summary:", summary);
+      toast.success("✅ PDF processed successfully!");
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("❌ Something went wrong during upload.");
     }
-
-    console.log("Validated Field:", validatedField.data);
-
-    // Await the upload response
-    const resp = await startUpload([file]);
-
-    if (!resp || resp.length === 0) {
-      console.log("Upload failed to start");
-      return;
-    }
-
-    // Pass only the first uploaded file as a single-element array
-    const summary = await generatePdfSummary([resp[0]]);
-    console.log("PDF Summary in UploadForm.tsx =>:", {summary});
   };
 
   return (

@@ -6,9 +6,7 @@ const fetchAndExtractPdfText = async (fileUrl: string) => {
   const response = await fetch(fileUrl);
   const blob = await response.blob();
 
-  // Correct usage: pass the Blob directly to PDFLoader
   const loader = new PDFLoader(blob);
-
   const docs = await loader.load();
 
   return docs.map((doc) => doc.pageContent).join("\n");

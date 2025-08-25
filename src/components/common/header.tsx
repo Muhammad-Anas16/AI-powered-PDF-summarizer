@@ -1,10 +1,52 @@
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
 import { FileText } from "lucide-react";
 import NavLink from "./navLink";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import Cookies from "js-cookie";
+import { useEffect, useState } from "react";
 
 const Header = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check token in cookies
+  useEffect(() => {
+    const token = Cookies.get("token");
+    setIsLoggedIn(!!token);
+  }, [pathname]);
+
+  // If user is on sign-in or sign-up page → only show logo
+  if (pathname === "/sign-in" || pathname === "/sign-up") {
+    return (
+      <nav className="flex justify-between items-center py-4 lg:px-8 px-4">
+        <div>
+          <NavLink
+            href={"/"}
+            className="flex items-center gap-1 lg:gap-2 shrink-0"
+          >
+            <FileText className="w-5 h-5 text-gray-900 hover:rotate-12 transform transition duration-200 ease-in-out" />
+            <span className="font-semibold lg:text-xl text-gray-900">Lubb</span>
+          </NavLink>
+        </div>
+      </nav>
+    );
+  }
+
+  // Click handler for protected links
+  const handleProtectedClick = (e: React.MouseEvent, href: string) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      router.push("/sign-in");
+    } else {
+      router.push(href);
+    }
+  };
+
   return (
     <nav className="flex justify-between items-center py-4 lg:px-8 px-4 ">
+      {/* Logo */}
       <div>
         <NavLink
           href={"/"}
@@ -14,27 +56,33 @@ const Header = () => {
           <span className="font-semibold lg:text-xl text-gray-900">Lubb</span>
         </NavLink>
       </div>
+
+      {/* Center Nav Items */}
       <div className="flex lg:justify-center gap-4 lg:gap-12 lg:items-center">
         <NavLink href="/#pricing">Pricing</NavLink>
-        <NavLink href="/dashboard" className="capitalize">
-          your summaries
-        </NavLink>
+        <button
+          onClick={(e) => handleProtectedClick(e, "/dashboard")}
+          className="capitalize hover:underline"
+        >
+          Your Summaries
+        </button>
       </div>
-      <div className="flex lg:justify-end">
-        <SignedIn>
-          <div className="flex gap-2 items-center">
-            <NavLink href="/upload">Upload a PDF</NavLink>
-            <div className="capitalize">pro</div>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </div>
-        </SignedIn>
 
-        <SignedOut>
-          <NavLink href="/sign-in">Sign In</NavLink>
-        </SignedOut>
+      {/* Right Nav Items */}
+      <div className="flex lg:justify-end gap-4 items-center">
+        <button
+          onClick={(e) => handleProtectedClick(e, "/upload")}
+          className="hover:underline"
+        >
+          Upload a PDF
+        </button>
 
+        {/* Show Sign In only if not logged in */}
+        {!isLoggedIn && (
+          <NavLink href="/sign-in" className="hover:underline">
+            Sign In
+          </NavLink>
+        )}
       </div>
     </nav>
   );

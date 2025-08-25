@@ -1,11 +1,9 @@
 import { createRouteHandler } from "uploadthing/next";
-
 import { ourFileRouter } from "./core";
 
-// Export routes for Next App Router
+// Make sure UploadThing uses your custom key
+process.env.UPLOADTHING_SECRET = process.env.UPLOADTHING_TOKEN;
+
 export const { GET, POST } = createRouteHandler({
   router: ourFileRouter,
-
-  // Apply an (optional) custom config:
-  // config: { ... },
 });
