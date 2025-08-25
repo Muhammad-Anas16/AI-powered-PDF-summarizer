@@ -57,7 +57,7 @@ const generatePdfSummary = async (
     return {
       success: true,
       message: "PDF processed successfully",
-      data: { userId, pdfText, summary },
+      data: { userId, fileName, pdfText, summary }, // Added fileName here
     };
   } catch (error) {
     console.error("Error processing PDF:", error);
