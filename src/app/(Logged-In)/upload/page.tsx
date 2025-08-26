@@ -1,9 +1,11 @@
+"use client";
+
 import BgGradient from "@/components/common/BgGradient";
 import UploadForm from "@/components/upload/uploadForm";
 import UploadHeader from "@/components/upload/uploadHeader";
 import React from "react";
 
-const page = () => {
+const Page = () => {
   return (
     <section className="min-h-screen">
       <BgGradient>
@@ -18,4 +20,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

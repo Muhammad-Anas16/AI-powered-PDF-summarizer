@@ -1,4 +1,5 @@
-
+// src/app/dashboard/page.tsx
+"use client"; // Make this client component because it uses interactive UI
 
 import BgGradient from "@/components/common/BgGradient";
 import { Button } from "@/components/ui/button";

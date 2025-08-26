@@ -11,7 +11,7 @@ const Header = () => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check token in cookies
+  // Check token in cookies whenever path changes
   useEffect(() => {
     const token = Cookies.get("token");
     setIsLoggedIn(!!token);
@@ -34,7 +34,7 @@ const Header = () => {
     );
   }
 
-  // Click handler for protected links
+  // Protected link click handler
   const handleProtectedClick = (e: React.MouseEvent, href: string) => {
     if (!isLoggedIn) {
       e.preventDefault();
@@ -44,8 +44,15 @@ const Header = () => {
     }
   };
 
+  // Logout handler
+  const handleLogout = () => {
+    Cookies.remove("token");        // Clear token
+    setIsLoggedIn(false);           // Update state immediately
+    router.push("/");               // Redirect to home
+  };
+
   return (
-    <nav className="flex justify-between items-center py-4 lg:px-8 px-4 ">
+    <nav className="flex justify-between items-center py-4 lg:px-8 px-4">
       {/* Logo */}
       <div>
         <NavLink
@@ -59,7 +66,7 @@ const Header = () => {
 
       {/* Center Nav Items */}
       <div className="flex lg:justify-center gap-4 lg:gap-12 lg:items-center">
-        <NavLink href="/#pricing">Pricing</NavLink>
+        {/* <NavLink href="/#pricing">Pricing</NavLink> */}
         <button
           onClick={(e) => handleProtectedClick(e, "/dashboard")}
           className="capitalize hover:underline"
@@ -77,11 +84,17 @@ const Header = () => {
           Upload a PDF
         </button>
 
-        {/* Show Sign In only if not logged in */}
-        {!isLoggedIn && (
+        {!isLoggedIn ? (
           <NavLink href="/sign-in" className="hover:underline">
             Sign In
           </NavLink>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="hover:underline text-red-600 font-semibold"
+          >
+            Logout
+          </button>
         )}
       </div>
     </nav>

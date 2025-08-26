@@ -1,6 +1,7 @@
+"use client";
+
 import BgGradient from "@/components/common/BgGradient";
 import { SignUp } from "@/components/common/SignUp";
-// import { SignUp } from "@clerk/nextjs";
 
 export default function Page() {
   return (

@@ -1,15 +1,16 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Source_Sans_3 as FontSans } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/common/header";
 import Footer from "@/components/common/footer";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
+import SessionWrapper from "@/components/common/SessionWrapper";
 
 const geistSans = FontSans({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["200","300","400","500","600","700","800","900"],
 });
 
 export const metadata: Metadata = {
@@ -20,23 +21,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${geistSans.variable} antialiased`}>
-          <div className="relative flex flex-col min-h-screen ">
+    <html lang="en">
+      <body className={`${geistSans.variable} antialiased`}>
+        {/* Wrap only the SessionProvider in a Client Component */}
+        <SessionWrapper>
+          <div className="relative flex flex-col min-h-screen">
             <Header />
-            <main className="">
-              {children}
-            </main>
+            <main>{children}</main>
             <Footer />
           </div>
           <Toaster />
-        </body>
-      </html>
-    </ClerkProvider>
+        </SessionWrapper>
+      </body>
+    </html>
   );
 }

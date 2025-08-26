@@ -4,17 +4,16 @@ import gemini from "@/lib/gemini";
 import fetchAndExtractPdfText from "@/lib/langChain";
 
 const generatePdfSummary = async (
-  uploadResponse: [
-    {
-      serverData: {
-        userId: string;
-        file: {
-          url: string;
-          name: string;
-        };
-      };
-    }
-  ]
+uploadResponse: {
+  serverData: {
+    userId: string;
+    file: {
+      url: string;
+      name: string;
+    };
+  };
+}[]
+
 ) => {
   if (!uploadResponse || uploadResponse.length === 0) {
     return {
