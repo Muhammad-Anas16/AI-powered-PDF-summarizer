@@ -10,7 +10,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-// ✅ Match models/User.ts (name, email, password only)
+// ✅ Frontend validation schema
 const registerSchema = yup.object({
   name: yup.string().required("Name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -40,11 +40,20 @@ export function SignUp() {
     setLoading(true);
 
     try {
-      const response = await axios.post("/api/auth/register", data);
+      // 🔥 map "name" → "fullname" for backend
+      const payload = {
+        fullname: data.name,
+        email: data.email,
+        password: data.password,
+      };
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE}api/auth/register`,
+        payload
+      );
 
       toast.success("🎉 Account created successfully! Please log in.");
       reset();
-
       router.push("/sign-in");
     } catch (err) {
       const error = err as AxiosError<{ error?: string; message?: string }>;
@@ -110,7 +119,9 @@ export function SignUp() {
             </button>
           </div>
           {errors.password && (
-            <span className="text-red-500 text-sm">{errors.password.message}</span>
+            <span className="text-red-500 text-sm">
+              {errors.password.message}
+            </span>
           )}
         </div>
 

@@ -9,12 +9,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import NavLink from "./navLink";
 import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
 import { Eye, EyeOff } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
-import { signIn } from "next-auth/react";  // <-- Import NextAuth signIn
+import Cookies from "js-cookie";
 
-// ✅ Validation Schema
 const loginSchema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
@@ -32,58 +29,59 @@ export function SignIn() {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<LoginInputs>({
-    resolver: yupResolver(loginSchema),
-  });
+  } = useForm<LoginInputs>({ resolver: yupResolver(loginSchema) });
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Custom email/password login
   const onLogin: SubmitHandler<LoginInputs> = async (data) => {
     setLoading(true);
-    toast.info("🔐 Logging you in... Please wait.");
+    toast.info("🔐 Logging you in...");
 
     try {
+      // ✅ Use your deployed backend URL
       const response = await axios.post(
-        "https://next-auth-one-pi.vercel.app/api/auth/login", 
-        { ...data, from: "web" }
+        `${process.env.NEXT_PUBLIC_API_BASE || "https://summerizer-api.vercel.app/"}api/auth/login`,
+        data
       );
 
-      const token = response.data?.token;
-      if (!token) throw new Error("Token not found in response");
+      const { error, message, data: resData } = response.data;
 
-      // ✅ Store token in cookies
-      Cookies.set("token", token, { secure: true, sameSite: "strict" });
+      if (error) {
+        toast.error(message || "Login failed");
+        return;
+      }
 
-      // ✅ Decode token (optional)
+      const token = response.data.token;
+      const user = response.data.user;
+
+      // Save token in localStorage
+      Cookies.set("token", token, { expires: 7 });
+
+
+      // Decode token and log everything
       const decoded = jwtDecode(token);
-      console.log("Decoded Token:", decoded);
+      // console.log("Decoded Token:", decoded);
+      // console.log("User Data:", user);
 
       toast.success("🎉 Login successful!");
       reset();
-      router.replace("/");
+      router.replace("/"); // redirect after login
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
       console.error("Login Error:", error);
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  };
-
-  // ✅ Google OAuth using NextAuth
-  const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/" }); // <-- Correct way to trigger NextAuth Google login
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
       <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
-      {/* Email/Password Login Form */}
       <form onSubmit={handleSubmit(onLogin)} className="space-y-4">
-        {/* Email Input */}
+        {/* Email */}
         <div>
           <label className="block text-sm font-medium">Email</label>
           <input
@@ -96,7 +94,7 @@ export function SignIn() {
           )}
         </div>
 
-        {/* Password Input with Toggle */}
+        {/* Password */}
         <div>
           <label className="block text-sm font-medium">Password</label>
           <div className="relative">
@@ -118,7 +116,7 @@ export function SignIn() {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
@@ -128,18 +126,6 @@ export function SignIn() {
         </button>
       </form>
 
-      {/* Google Login */}
-      {/* <div className="mt-4">
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center border rounded-lg py-2 font-semibold hover:bg-gray-100 transition"
-        >
-          <FcGoogle className="mr-2 text-xl" />
-          Login with Google
-        </button>
-      </div> */}
-
-      {/* Link to Register */}
       <p className="text-center mt-4 text-sm">
         Don’t have an account?{" "}
         <NavLink

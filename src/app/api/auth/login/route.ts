@@ -1,46 +1,76 @@
 import { NextResponse } from "next/server";
 import connectMongo from "@/lib/mongodb";
 import User from "@/models/User";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export async function POST(req: Request) {
   try {
     await connectMongo();
-    const { email, password } = await req.json();
 
-    const user = await User.findOne({ email });
+    const body = await req.json();
+    const { email, password } = body;
+
+    if (!email || !password) {
+      return NextResponse.json(
+        {
+          error: true,
+          message: "Email and password are required",
+          data: null,
+        },
+        { status: 400 }
+      );
+    }
+
+    const user = await User.findOne({ email }).lean();
+    console.log("Login attempt:", email, "User found:", !!user);
+
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Invalid credentials" },
-        { status: 401 }
+        {
+          error: true,
+          message: "User is not registered",
+          data: null,
+        },
+        { status: 403 }
       );
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log("Password valid:", isPasswordValid);
+
+    if (!isPasswordValid) {
       return NextResponse.json(
-        { success: false, message: "Invalid credentials" },
-        { status: 401 }
+        {
+          error: true,
+          message: "Invalid password",
+          data: null,
+        },
+        { status: 403 }
       );
     }
 
-    // ✅ Create JWT Token
-    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const tokenPayload = { id: user._id.toString(), email: user.email };
+    const token = jwt.sign(tokenPayload, process.env["AUTH-SECRET"] as string);
 
-    return NextResponse.json({ success: true, token, user }, { status: 200 });
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return NextResponse.json(
-        { success: false, message: err.message },
-        { status: 500 }
-      );
-    }
+    const { password: _, ...userWithoutPassword } = user;
+
     return NextResponse.json(
-      { success: false, message: "Unknown error occurred" },
+      {
+        error: false,
+        message: "User login successfully",
+        data: { user: userWithoutPassword, token },
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("Login error:", err);
+    return NextResponse.json(
+      {
+        error: true,
+        message: "Internal server error",
+        data: null,
+      },
       { status: 500 }
     );
   }

@@ -7,6 +7,7 @@ import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
 import generatePdfSummary from "@/action/uploadAction";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 const schema = z.object({
   file: z
@@ -19,27 +20,49 @@ const schema = z.object({
     }),
 });
 
+type SummaryData = {
+  userId: string;
+  fileName: string;
+  pdfText: string;
+  summary: string | null;
+  importantPoints?: string[];
+  answers?: string[];
+};
+
+type SummaryResponse =
+  | { success: false; message: string; data: null }
+  | { success: true; message: string; data: SummaryData };
+
+interface DecodedToken {
+  id: string;
+  email?: string;
+  fullname?: string;
+  exp?: number;
+}
+
 const UploadForm = () => {
   const { startUpload } = useUploadThing("pdfUploader", {
-    onClientUploadComplete: () => {
-      console.log("Uploaded successfully!");
-    },
-
-    onUploadError: (err) => {
-      toast.error(`An error occurred during upload: ${err.message}`);
-    },
-
-    onUploadBegin: ({ file }: any) => {
-      console.log("Upload has begun for", file);
-    },
+    onClientUploadComplete: () => console.log("Uploaded successfully!"),
+    onUploadError: (err) => toast.error(`An error occurred: ${err.message}`),
+    onUploadBegin: (fileName: string) =>
+      console.log("Upload has begun for", fileName),
   });
 
   const HandleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const token = Cookies.get("token");
+    const token = Cookies.get("token"); // ✅ check login
     if (!token) {
       toast.error("❌ You must be logged in to upload.");
+      return;
+    }
+
+    // 🔑 decode token to get userId
+    let decoded: DecodedToken | null = null;
+    try {
+      decoded = jwtDecode<DecodedToken>(token);
+    } catch (err) {
+      toast.error("❌ Invalid user token, please log in again.");
       return;
     }
 
@@ -66,10 +89,31 @@ const UploadForm = () => {
         return;
       }
 
-      // Only pass the first uploaded file to match your generatePdfSummary() type
-      const summary = await generatePdfSummary([resp[0]]);
-      console.log("PDF Summary:", summary);
-      toast.success("✅ PDF processed successfully!");
+      const summary: SummaryResponse = await generatePdfSummary([resp[0]]);
+      if (!summary.success || !summary.data) {
+        toast.error("❌ Failed to process PDF.");
+        return;
+      }
+
+      console.log("📄 PDF Summary:", summary.data);
+
+      // ✅ Save summary with userId
+      await fetch("/api/summary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: decoded.id, // attach userId from token
+          fileName: summary.data.fileName,
+          pdfText: summary.data.pdfText || "",
+          summary: summary.data.summary || "",
+          importantPoints: summary.data.importantPoints || [],
+          answers: summary.data.answers || [],
+        }),
+      });
+
+      toast.success("✅ PDF processed and saved successfully!");
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("❌ Something went wrong during upload.");

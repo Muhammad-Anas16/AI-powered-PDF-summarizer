@@ -8,18 +8,24 @@ export async function POST(req: Request) {
     await connectMongo();
     const body = await req.json();
 
-    // ✅ Get JWT token from Authorization header
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
+    // ✅ Get token from cookies manually
+    const cookieHeader = req.headers.get("cookie") || "";
+    const cookies = new Map(
+      cookieHeader
+        .split(";")
+        .map((c) => c.trim().split("="))
+        .map(([k, v]) => [k, v])
+    );
+
+    const token = cookies.get("userToken");
+    if (!token) {
       return NextResponse.json(
-        { success: false, message: "No token provided" },
+        { success: false, message: "No token provided in cookies" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.split(" ")[1];
     const decoded = verifyAuthToken(token);
-
     if (!decoded?.id) {
       return NextResponse.json(
         { success: false, message: "Invalid token" },
@@ -27,6 +33,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Save summary
     const newSummary = new Summary({
       userId: decoded.id,
       fileName: body.fileName,
