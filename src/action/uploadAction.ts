@@ -56,7 +56,7 @@ uploadResponse: {
     return {
       success: true,
       message: "PDF processed successfully",
-      data: { userId, fileName, pdfText, summary }, // Added fileName here
+      data: { userId, fileName, summary }, // Added fileName here
     };
   } catch (error) {
     console.error("Error processing PDF:", error);

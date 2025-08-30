@@ -1,14 +1,17 @@
+
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import UploadFormInput from "./uploadFormInput";
 import { z } from "zod";
 import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
 import generatePdfSummary from "@/action/uploadAction";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
+// === PDF validation schema ===
 const schema = z.object({
   file: z
     .instanceof(File, { message: "Invalid file" })
@@ -20,51 +23,44 @@ const schema = z.object({
     }),
 });
 
+// === Types ===
 type SummaryData = {
   userId: string;
   fileName: string;
   pdfText: string;
   summary: string | null;
-  importantPoints?: string[];
-  answers?: string[];
 };
 
 type SummaryResponse =
   | { success: false; message: string; data: null }
   | { success: true; message: string; data: SummaryData };
 
-interface DecodedToken {
-  id: string;
-  email?: string;
-  fullname?: string;
-  exp?: number;
-}
+const UploadForm: React.FC = () => {
+  const userId = useSelector((state: RootState) => state.user.userId);
 
-const UploadForm = () => {
+  useEffect(() => {
+    console.log("Redux User ID in Home component:", userId);
+  }, [userId]);
+
   const { startUpload } = useUploadThing("pdfUploader", {
-    onClientUploadComplete: () => console.log("Uploaded successfully!"),
-    onUploadError: (err) => toast.error(`An error occurred: ${err.message}`),
+    onClientUploadComplete: () => console.log("✅ Uploaded successfully!"),
+    onUploadError: (err) => {
+      toast.error(`❌ Upload error: ${err.message}`);
+    },
     onUploadBegin: (fileName: string) =>
-      console.log("Upload has begun for", fileName),
+      console.log("⏳ Upload has begun for", fileName),
   });
 
-  const HandleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const HandleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
 
-    const token = Cookies.get("token"); // ✅ check login
-    if (!token) {
-      toast.error("❌ You must be logged in to upload.");
+    if (!userId) {
+      toast.error("❌ User ID is required.");
       return;
     }
-
-    // 🔑 decode token to get userId
-    let decoded: DecodedToken | null = null;
-    try {
-      decoded = jwtDecode<DecodedToken>(token);
-    } catch (err) {
-      toast.error("❌ Invalid user token, please log in again.");
-      return;
-    }
+    console.log("👤 User ID checking:", userId);
 
     const formData = new FormData(e.currentTarget);
     const file = formData.get("file");
@@ -83,40 +79,60 @@ const UploadForm = () => {
     toast.info("📑 Processing: AI is reading your PDF...✨ Please wait.");
 
     try {
+      // 1️⃣ Upload file
       const resp = await startUpload([file]);
       if (!resp || resp.length === 0) {
         toast.error("❌ Upload failed.");
         return;
       }
 
-      const summary: SummaryResponse = await generatePdfSummary([resp[0]]);
+      // 2️⃣ Generate summary using AI
+      const summary = (await generatePdfSummary([resp[0]])) as SummaryResponse;
       if (!summary.success || !summary.data) {
         toast.error("❌ Failed to process PDF.");
         return;
       }
 
-      console.log("📄 PDF Summary:", summary.data);
+      console.log("📄 PDF Summary from AI:", summary.data);
 
-      // ✅ Save summary with userId
-      await fetch("/api/summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: decoded.id, // attach userId from token
-          fileName: summary.data.fileName,
-          pdfText: summary.data.pdfText || "",
-          summary: summary.data.summary || "",
-          importantPoints: summary.data.importantPoints || [],
-          answers: summary.data.answers || [],
-        }),
+      // 3️⃣ Save summary to backend
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE ||
+        "https://summerizer-api.vercel.app/";
+
+      // ✅ Always ensure summary.summary is a string
+      const payload = {
+        userId,
+        fileName: summary.data.fileName,
+        summary: { summary: summary.data.summary || "No summary available" },
+      };
+
+      console.log("📡 Saving summary payload:", payload);
+
+      const saveResponse = await axios.post(`${apiBase}api/summary`, payload, {
+        headers: { "Content-Type": "application/json" },
       });
 
+      console.log("📡 API Save Response:", saveResponse.data);
       toast.success("✅ PDF processed and saved successfully!");
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("❌ Something went wrong during upload.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          "❌ API save error:",
+          error.response?.data || error.message
+        );
+        toast.error(
+          `❌ Failed to save summary: ${
+            error.response?.data?.error || error.message
+          }`
+        );
+      } else if (error instanceof Error) {
+        console.error("❌ API save error:", error.message);
+        toast.error(`❌ Failed to save summary: ${error.message}`);
+      } else {
+        console.error("❌ API save error:", error);
+        toast.error("❌ Failed to save summary: Unknown error");
+      }
     }
   };
 
