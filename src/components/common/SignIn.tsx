@@ -53,7 +53,7 @@ export function SignIn() {
       }
 
       const token = response.data.token;
-      const user = response.data.user;
+      // const user = response.data.user;
 
       // Save token in localStorage
       Cookies.set("token", token, { expires: 7 });
@@ -61,7 +61,7 @@ export function SignIn() {
 
       // Decode token and log everything
       const decoded = jwtDecode(token);
-      // console.log("Decoded Token:", decoded);
+      console.log("Decoded Token:", decoded);
       // console.log("User Data:", user);
 
       toast.success("🎉 Login successful!");

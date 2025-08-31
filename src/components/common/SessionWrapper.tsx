@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { de } from "zod/v4/locales";
 
 interface DecodedToken {
   id: string;
