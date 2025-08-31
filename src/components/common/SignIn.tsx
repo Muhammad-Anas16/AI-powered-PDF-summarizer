@@ -45,7 +45,11 @@ export function SignIn() {
         data
       );
 
+<<<<<<< HEAD
       const { error, message } = response.data;
+=======
+      const { error, message, data: resData } = response.data;
+>>>>>>> b13b040ad3b491fbe3f9f90a5f7b60294a51321f
 
       if (error) {
         toast.error(message || "Login failed");
