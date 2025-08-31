@@ -52,6 +52,8 @@ export function SignUp() {
         payload
       );
 
+      if (!response) toast.success("Registration failed");
+
       toast.success("🎉 Account created successfully! Please log in.");
       reset();
       router.push("/sign-in");
@@ -74,7 +76,9 @@ export function SignUp() {
       <form onSubmit={handleSubmit(onRegister)} className="space-y-5">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
           <input
             type="text"
             {...register("name")}
@@ -88,7 +92,9 @@ export function SignUp() {
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
           <input
             type="email"
             {...register("email")}
@@ -102,7 +108,9 @@ export function SignUp() {
 
         {/* Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Password</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
