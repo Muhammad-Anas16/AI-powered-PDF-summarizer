@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import NavLink from "./navLink";
-import { jwtDecode } from "jwt-decode";
+// import { jwtDecode } from "jwt-decode";
 import { Eye, EyeOff } from "lucide-react";
 import Cookies from "js-cookie";
 
@@ -60,8 +60,8 @@ export function SignIn() {
 
 
       // Decode token and log everything
-      const decoded = jwtDecode(token);
-      console.log("Decoded Token:", decoded);
+      // const decoded = jwtDecode(token);
+      // console.log("Decoded Token:", decoded);
       // console.log("User Data:", user);
 
       toast.success("🎉 Login successful!");
