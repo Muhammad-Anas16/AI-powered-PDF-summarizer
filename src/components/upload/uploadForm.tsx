@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from "react";
@@ -10,6 +9,7 @@ import generatePdfSummary from "@/action/uploadAction";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
+import { useRouter } from "next/navigation";
 
 // === PDF validation schema ===
 const schema = z.object({
@@ -37,9 +37,10 @@ type SummaryResponse =
 
 const UploadForm: React.FC = () => {
   const userId = useSelector((state: RootState) => state.user.userId);
+  const router = useRouter();
 
   useEffect(() => {
-    console.log("Redux User ID in Home component:", userId);
+    console.log("update to redux state menegment");
   }, [userId]);
 
   const { startUpload } = useUploadThing("pdfUploader", {
@@ -60,7 +61,7 @@ const UploadForm: React.FC = () => {
       toast.error("❌ User ID is required.");
       return;
     }
-    console.log("👤 User ID checking:", userId);
+    // console.log("👤 User ID checking:", userId);
 
     const formData = new FormData(e.currentTarget);
     const file = formData.get("file");
@@ -93,7 +94,7 @@ const UploadForm: React.FC = () => {
         return;
       }
 
-      console.log("📄 PDF Summary from AI:", summary.data);
+      // console.log("📄 PDF Summary from AI:", summary.data);
 
       // 3️⃣ Save summary to backend
       const apiBase =
@@ -107,14 +108,18 @@ const UploadForm: React.FC = () => {
         summary: { summary: summary.data.summary || "No summary available" },
       };
 
-      console.log("📡 Saving summary payload:", payload);
+      // console.log("📡 Saving summary payload:", payload);
 
       const saveResponse = await axios.post(`${apiBase}api/summary`, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("📡 API Save Response:", saveResponse.data);
+      console.log("📡 API Save Response:", saveResponse.data.fileName);
       toast.success("✅ PDF processed and saved successfully!");
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.error(

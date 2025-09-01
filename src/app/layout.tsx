@@ -6,6 +6,7 @@ import Footer from "@/components/common/footer";
 import { Toaster } from "@/components/ui/sonner";
 import SessionWrapper from "@/components/common/SessionWrapper";
 import ReduxProvider from "@/components/common/ReduxProvider";
+import StoringUserId from "@/components/storingUserId";
 
 const geistSans = FontSans({
   variable: "--font-geist-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
           <SessionWrapper>
             <div className="relative flex flex-col min-h-screen">
               <Header />
+              <StoringUserId />
               <main>{children}</main>
               <Footer />
             </div>

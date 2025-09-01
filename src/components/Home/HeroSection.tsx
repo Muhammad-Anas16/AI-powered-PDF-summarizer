@@ -5,6 +5,7 @@ import React from 'react'
 import { Button } from '../ui/button'
 import { Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link';
 
 const HeroSection = () => {
     return (
@@ -36,6 +37,7 @@ const HeroSection = () => {
             </h2>
 
             {/* CTA Button */}
+            <Link href="/upload">
             <Button
                 className="text-white text-base sm:text-lg lg:text-xl rounded-full px-8 sm:px-10 lg:px-12 py-4 sm:py-6 lg:py-6
                    bg-gradient-to-r from-green-800 via-green-500 to-green-200
@@ -44,6 +46,7 @@ const HeroSection = () => {
             >
                 Try Lubb →
             </Button>
+            </Link>
         </section>
     )
 }
