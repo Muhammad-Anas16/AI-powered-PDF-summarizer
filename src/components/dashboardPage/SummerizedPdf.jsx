@@ -109,7 +109,7 @@ const SummarizedPdf = () => {
               delay={150}
               animateBy="words"
               direction="top"
-              className="text-sm text-gray-700 whitespace-pre-line mb-8"
+              className="text-sm text-gray-800 whitespace-pre-line mb-8"
             />
         </div>
       ) : (
